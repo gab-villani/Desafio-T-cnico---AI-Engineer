@@ -70,8 +70,9 @@
 - Criado `src/agent.py` com a função pública `responder(mensagem, historico)`. A interface permanece desacoplada: recebe e atualiza uma lista de histórico textual em memória, permitindo troca futura do CLI sem modificar o agente.
 - O loop executa as funções solicitadas pelo modelo em `StoreTools`, devolve seus resultados ao Gemini e tem limite de 6 iterações para evitar loops infinitos. Funções desconhecidas ou argumentos inválidos retornam erro estruturado ao modelo.
 - O modelo e a chave são lidos de `GEMINI_MODEL` e `GEMINI_API_KEY`; se ausentes, o agente falha com mensagem de configuração clara sem expor segredos.
-- Chamadas da API têm até 3 tentativas para rate limit (HTTP 429), com backoff exponencial limitado de 1s e 2s. Chamadas possuem timeout de 30s; outros erros são convertidos em mensagem recuperável ao chamador.
-- O teste de compilação e fluxo de mensagem vazia passou. A chamada real ao Gemini excedeu 120 segundos no ambiente de desenvolvimento antes de qualquer resposta. Isso será repetido no smoke test após o CLI, com observação de modelo/chave/limite caso persista.
+- Chamadas da API têm até 2 tentativas para rate limit HTTP 429 ou indisponibilidade HTTP 503, com backoff exponencial limitado de 1s. Chamadas possuem timeout de 30s; outros erros são convertidos em mensagem recuperável ao chamador.
+- Diagnóstico inicial com logs temporários revelou a causa raiz da lentidão: modelos `gemini-3.8-flash` (HTTP 503, alta demanda após 35s), `gemini-2.5-flash` e `gemini-2.5-flash-lite` (HTTP 404, descontinuados para novos usuários) não estavam acessíveis. O modelo `gemini-3.5-flash-lite` foi validado e respondeu em ~6 segundos totais para a pergunta dos violões, incluindo function calling, execução da tool (7ms) e geração da resposta formatada.
+- Teste bem-sucedido: a pergunta "Quais violões disponíveis até R$ 1000?" acionou `buscar_produtos`, retornou 12 produtos e gerou resposta completa organizada por tipo de corda.
 
 ### Uso de assistentes de código
 

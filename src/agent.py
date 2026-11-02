@@ -17,28 +17,31 @@ from src.tools import TOOL_SCHEMAS, StoreTools
 
 load_dotenv()
 MAX_TOOL_ITERATIONS = 6
-MAX_API_ATTEMPTS = 3
+MAX_API_ATTEMPTS = 2
 BACKOFF_SECONDS = 1.0
+SDK_RETRY_ATTEMPTS = 1
 
 
 class AgentError(RuntimeError):
     """Erro recuperável ao comunicar com o provedor do modelo."""
 
 
-def _is_rate_limit_error(error: Exception) -> bool:
+def _is_rate_limit_or_unavailable(error: Exception) -> bool:
+    """Detecta rate limit (429) ou indisponibilidade temporária (503)."""
     status_code = getattr(error, "status_code", None) or getattr(error, "code", None)
-    return status_code == 429 or "429" in str(error) or "rate limit" in str(error).lower()
+    error_str = str(error).lower()
+    return status_code in {429, 503} or "429" in error_str or "503" in error_str or "rate limit" in error_str or "service_unavailable" in error_str or "high demand" in error_str
 
 
 def _call_with_retry(call: Callable[[], Any]) -> Any:
-    """Executa chamada à API, repetindo apenas rate limit com backoff limitado."""
-    for attempt in range(MAX_API_ATTEMPTS):
+    """Executa chamada à API com no máximo duas tentativas para indisponibilidade temporária."""
+    for attempt in range(1, MAX_API_ATTEMPTS + 1):
         try:
             return call()
-        except Exception as error:  # SDK expõe subclasses que podem mudar entre versões.
-            if not _is_rate_limit_error(error) or attempt == MAX_API_ATTEMPTS - 1:
+        except Exception as error:
+            if not _is_rate_limit_or_unavailable(error) or attempt == MAX_API_ATTEMPTS:
                 raise AgentError("Não foi possível consultar o assistente agora. Tente novamente em instantes.") from error
-            time.sleep(BACKOFF_SECONDS * (2**attempt))
+            time.sleep(BACKOFF_SECONDS * (2 ** (attempt - 1)))
     raise AssertionError("Fluxo de retry inesperado.")
 
 
@@ -86,7 +89,10 @@ def responder(mensagem: str, historico: list[dict[str, str]] | None = None) -> s
 
     conversation = historico if historico is not None else []
     tools = StoreTools(load_data())
-    client = genai.Client(api_key=api_key)
+    client = genai.Client(
+        api_key=api_key,
+        http_options={"retry_options": {"attempts": SDK_RETRY_ATTEMPTS}},
+    )
     tool_definitions = [{"type": "function", **schema} for schema in TOOL_SCHEMAS]
     user_input = f"{mensagem.strip()}{_history_context(conversation)}"
     interaction = _call_with_retry(
