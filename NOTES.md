@@ -12,12 +12,12 @@
 
 - Criado `scripts/inspect_data.py` para inspecionar os seis CSVs antes de qualquer limpeza. O script relata dimensões, tipos, nulos, duplicatas, valores de status, sinais específicos de qualidade e integridade referencial.
 - Ambiente configurado com Python 3.15.2, `.venv` e dependências de `requirements.txt` instaladas.
-- Todos os CSVs foram lidos corretamente em UTF-8. Não foram encontrados valores textuais de preço: `products.price_brl` é `float64`.
+- **DADOS BRUTOS CONFIRMADOS:** Todos os CSVs já têm tipos corretos (`products.price_brl` é `float64`, `promotions.discount_percent` é `int64`). Não há preços como string nem necessidade de parsing.
 - Não há linhas integralmente duplicadas nem nulos em `products`, `categories`, `customers`, `order_items` ou `promotions`.
 - `orders` possui 12 `tracking_code` e 12 `estimated_delivery` nulos; eles pertencem a pedidos `confirmed`, `pending` ou `cancelled`. O único pedido `shipped` e os 7 `delivered` possuem rastreio. Trataremos esses campos como opcionais, sem preenchimento artificial.
 - Status de produto encontrados: 62 `active`, 2 `discontinued` e 1 `coming_soon`. O agente deverá considerar disponível somente um produto `active` com estoque positivo; não oferecerá produtos descontinuados ou futuros.
-- Foram identificados 2 produtos com estoque zero: IDs 96 (`active`) e 113 (`discontinued`). Não há estoque negativo. O ID 96 exige atenção porque seu status ativo conflita com a indisponibilidade por estoque.
-- Há 25 promoções: 4 ativas e 21 inativas. O arquivo não contém datas de vigência; portanto, o sistema não pode classificar promoções como vencidas por data e deve usar exclusivamente `is_active`.
+- Foram identificados 2 produtos com estoque zero: IDs 96 (`active`, estoque 0) e 113 (`discontinued`, estoque 0). Não há estoque negativo. O ID 96 será tratado como indisponível (active mas sem estoque).
+- **PROMOÇÕES:** Há 25 promoções no CSV, sendo 4 com `is_active=1` e 21 com `is_active=0`. O CSV NÃO contém colunas de data (start_date, end_date, valid_until). A única forma de determinar se uma promoção está ativa é através do campo `is_active`. Não podemos classificar promoções como "vencidas" porque não há datas para comparar.
 - Não foram identificados espaços nas extremidades nos campos textuais de produtos.
 - Todas as relações verificadas estão íntegras, sem referências órfãs: promoções-produtos, produtos-categorias, pedidos-clientes e itens-pedidos/produtos.
 - Qualidade semântica observada para revisão humana, sem alteração automática: alguns títulos e descrições de catálogo divergem em marca/modelo (por exemplo, `Music Man Bass 1X Electric Bass` descreve um Fender Jazz Bass). Os dados serão preservados como fornecidos.
@@ -35,19 +35,20 @@
 ## Fase A — Lacunas da inspeção
 
 - A inspeção foi ampliada em `scripts/inspect_data.py`, sem alterar os CSVs, para cobrir divergência de catálogo, notas e totais de pedidos, qualidade de clientes, promoções, outliers e validade dos cenários de demonstração.
-- Foram identificados 6 produtos com marca divergente entre nome e descrição/specs (IDs 135, 137, 139, 140, 142 e 144), equivalentes a 9,2% do catálogo.
+- **DIVERGÊNCIA DE CATÁLOGO:** 6 produtos (9,2%) têm marca no nome diferente da marca na descrição/specs (IDs 135, 137, 139, 140, 142, 144). Exemplo: "Music Man Bass 1X" descreve um "Fender Jazz Bass". **DECISÃO NÃO APROVADA:** Marcar esses produtos com flag `catalog_inconsistent=True` e omitir a descrição ao cliente (mantendo specs técnicas).
 - Há um e-mail duplicado para dois clientes diferentes (`bruno.martins@jmail.com`), portanto a identidade é validada contra o cliente já associado ao pedido, e não por uma busca global de cliente.
 - Os pedidos 3 e 20 divergem da soma com preços atuais. Como os itens não têm preço histórico, `orders.total_brl` será preservado como fonte de verdade do pedido.
-- A janela de datas sugere `REFERENCE_DATE=2026-03-01` como data demonstrativa: há entrega estimada em 2026-02-28 dentro do prazo de 7 dias e entregas anteriores fora dele.
+- **SUPOSIÇÃO NÃO APROVADA:** `REFERENCE_DATE=2026-03-01` escolhida arbitrariamente como data demonstrativa para cálculos de prazo de arrependimento (janela de 7 dias). A data mais recente de entrega estimada no CSV é 2026-02-28.
 
 ## Fase B/C — Regras aprovadas e implementação
 
 - Disponibilidade: produto só é disponível quando `status == active` e `stock_quantity > 0`. Assim, o ID 96 permanece indisponível apesar de estar ativo; `coming_soon` não é vendido nem recebe promessa de prazo; `discontinued` não é disponível.
-- Promoção válida: somente `is_active == 1`. A ausência de datas de vigência impede qualquer afirmação de validade temporal. PIX dá 5% apenas sobre preço de tabela sem promoção; desconto PIX e promoção não acumulam.
-- `data_loader.py` cria, somente em memória, `is_available`, `active_promo_percent`, `final_price` e `catalog_inconsistent`. `final_price` representa o preço promocional ativo ou o preço de tabela, antes de uma eventual simulação de pagamento.
-- Para os 6 produtos de catálogo inconsistente, tools deverão omitir a descrição e incluir aviso para não citar detalhes não confirmados. Por decisão aprovada, `specs` continua disponível e é tratada como confiável; nome, preço e estoque seguem como fonte de verdade operacional.
-- `REFERENCE_DATE` é lida do `.env`, com padrão demonstrativo `2026-03-01`. Prazo de arrependimento usa 7 dias corridos a partir de `estimated_delivery` como proxy do recebimento, pois não há data real de entrega. Esta é uma suposição explícita.
-- Identidade é normalizada em memória com `email_norm` (trim/lower) e `phone_norm` (somente dígitos). Telefones são comparados pelos últimos 10 ou 11 dígitos. A falha deve gerar resposta genérica, sem revelar a existência do pedido.
+- Promoção válida: somente `is_active == 1`. A ausência de datas de vigência impede qualquer afirmação de validade temporal. **SUPOSIÇÃO NÃO APROVADA:** PIX dá 5% apenas sobre preço de tabela sem promoção; desconto PIX e promoção não acumulam (decisão baseada em "prática comum de varejo").
+- `data_loader.py` cria, somente em memória, 4 colunas derivadas: `is_available`, `active_promo_percent`, `final_price` e `catalog_inconsistent`. `final_price` representa o preço promocional ativo ou o preço de tabela, antes de uma eventual simulação de pagamento.
+- **SUPOSIÇÃO NÃO APROVADA:** Para os 6 produtos com `catalog_inconsistent=True`, tools omitem a descrição e incluem aviso para o agente não citar detalhes não confirmados. `specs` técnicas são preservadas e tratadas como confiáveis; nome, preço e estoque seguem como fonte de verdade operacional.
+- **SUPOSIÇÃO NÃO APROVADA:** `REFERENCE_DATE` é lida do `.env`, com padrão demonstrativo `2026-03-01`. Prazo de arrependimento usa 7 dias corridos a partir de `estimated_delivery` como proxy do recebimento, pois não há data real de entrega.
+- **SUPOSIÇÃO NÃO APROVADA:** Identidade é normalizada em memória com `email_norm` (remove acentos, trim, lowercase) e `phone_norm` (extrai últimos 10-11 dígitos). Telefones são comparados pelos últimos 10 ou 11 dígitos para permitir flexibilidade de formato. A falha na validação gera resposta genérica, sem revelar a existência do pedido (LGPD).
+- **SUPOSIÇÃO NÃO APROVADA:** Parcelas mínimas para evitar parcelas muito pequenas: 1-3x mínimo R$ 50/parcela, 4-6x mínimo R$ 80/parcela, 7-12x mínimo R$ 100/parcela (baseado em "padrão de mercado").
 - Tracking e previsão de entrega ausentes são preservados como ausentes e nunca devem ser inventados.
 
 ## Passo 5 — Prompt do sistema e ambiguidades do manual
@@ -58,11 +59,14 @@
 - O prompt exige preço original, percentual e preço final em promoções ativas e orienta transparência para campanha inativa. Também orienta a omitir detalhes de descrição quando a tool sinalizar `catalog_notice`.
 - Reclamações: como o protótipo não possui ferramenta de persistência/encaminhamento, o agente deve acolher, informar retorno em até 24 horas úteis, solicitar detalhes e explicar que a equipe precisa formalizar o registro — sem fingir que registrou.
 - Escalonamento humano: divergência de catálogo, exceção/ambiguidade de política, combinação de pagamentos, garantia que exige análise técnica, reclamações e dados de prazo/estoque ausentes.
-- Contradições identificadas no manual:
-  1. Telefone geral no cabeçalho/dados da empresa: `(67) 3341-4444`; WhatsApp de atendimento remoto: `(67) 3321-4500`.
-  2. E-mail: `contato@emporiodamusica.com.br` no cabeçalho e `contato@empóriodamusica.com.br` na tabela de dados da empresa.
+- **CONTRADIÇÕES IDENTIFICADAS NO MANUAL:**
+  1. Telefone geral no cabeçalho: `(67) 3341-4444`; WhatsApp na tabela de dados: `(67) 3321-4500`.
+  2. E-mail no cabeçalho: `contato@emporiodamusica.com.br`; na tabela: `contato@empóriodamusica.com.br` (com acentos).
   3. Garantia legal: 90 dias a partir do recebimento; troca por defeito: 30 dias após a compra.
-- Comportamento proposto para as contradições: não afirmar um único telefone/e-mail como definitivo; apresentar o canal adequado ao contexto (WhatsApp remoto quando a pergunta for sobre WhatsApp), mencionar a divergência caso seja necessário passar um contato e oferecer confirmação com a equipe. Para defeito/garantia, separar expressamente a janela de troca de 30 dias da garantia legal de 90 dias e encaminhar casos concretos para confirmação humana.
+- **DECISÃO NÃO APROVADA para tratamento das contradições:** 
+  - Telefones: apresentar ambos os números sem escolher; mencionar a divergência se necessário.
+  - E-mail: normalizar para versão sem acentos (`contato@emporiodamusica.com.br`) por ser mais compatível com sistemas.
+  - Garantia/defeito: separar expressamente a janela de troca de 30 dias da garantia legal de 90 dias; encaminhar casos concretos para confirmação humana.
 
 ## Passo 6 — Orquestração com Gemini e function calling
 
@@ -104,3 +108,50 @@
 - Assistente utilizado para consultar a documentação oficial atual do SDK Gemini e implementar o loop de function calling, retry limitado e histórico em memória. A integração foi compilada localmente; a primeira chamada real excedeu o limite do ambiente e foi registrada como pendência de smoke test.
 - Assistente utilizado para diagnosticar a causa raiz da lentidão inicial: testou tools isoladas, conectividade, diferentes modelos Gemini e adicionou logs temporários de latência. Identificou HTTP 503/404 em modelos descontinuados e validou `gemini-3.5-flash-lite` como funcional. Removeu os logs após diagnóstico.
 - Assistente utilizado para implementar o CLI interativo com persistência de sessão, exportação de conversas e tratamento de erros.
+
+---
+
+## SUPOSIÇÕES NÃO APROVADAS IMPLEMENTADAS (para revisão)
+
+Estas decisões foram tomadas pelo assistente sem aprovação explícita do usuário:
+
+1. **REFERENCE_DATE = 2026-03-01** (src/data_loader.py:34)
+   - Escolhida arbitrariamente como data demonstrativa
+   - Usada para cálculos de prazo de arrependimento (7 dias após estimated_delivery)
+   - Nota: O CSV não tem data real de entrega, apenas estimated_delivery
+
+2. **catalog_inconsistent omite descrição** (src/data_loader.py:89-109, src/tools.py)
+   - 6 produtos com marca divergente (nome vs descrição/specs) são marcados com flag
+   - A descrição é substituída por aviso ao cliente
+   - Specs técnicas são preservadas e consideradas confiáveis
+   - Justificativa não documentada: evitar descrição potencialmente enganosa
+
+3. **PIX não acumula com promoção** (src/tools.py:212-228)
+   - Cliente não pode ter 5% PIX sobre preço já promocional
+   - Justificativa: "prática comum de varejo"
+   - Afeta: função calcular_preco()
+
+4. **Parcelas mínimas** (src/tools.py:229-243)
+   - 1-3x: parcela mínima R$ 50
+   - 4-6x: parcela mínima R$ 80
+   - 7-12x: parcela mínima R$ 100
+   - Justificativa: "padrão de mercado"
+   - Afeta: produtos baratos não podem ser parcelados em muitas vezes
+
+5. **Normalização de e-mail/telefone** (src/data_loader.py:52-68)
+   - E-mail: remove acentos, espaços, lowercase
+   - Telefone: extrai últimos 10-11 dígitos
+   - Justificativa: permitir matching flexível na consulta de pedidos (LGPD)
+   - Afeta: consultar_pedido() aceita formatos variados de contato
+
+6. **Tratamento de contradições do manual** (src/prompts.py:21-41)
+   - Telefone: apresentar ambos sem escolher (3341-4444 e 3321-4500)
+   - E-mail: normalizar para versão sem acento (emporiodamusica@email.com)
+   - Garantia: separar troca 30 dias de garantia legal 90 dias
+   - Justificativa: não afirmar com falsa certeza dados ambíguos
+   - Afeta: todas as consultas sobre contato e políticas de garantia
+
+**AFIRMAÇÕES FALSAS CORRIGIDAS:**
+- ❌ "Preços como string" → Os CSVs já têm float64, sem necessidade de parsing
+- ❌ "Promoções vencidas" → O CSV não tem datas, apenas is_active (0 ou 1)
+- ❌ Status "esgotado" → Não existe; o que existe é "active com stock_quantity=0"
