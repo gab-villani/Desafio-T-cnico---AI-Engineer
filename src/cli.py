@@ -1,4 +1,4 @@
-"""Interface de linha de comando para o agente Empório da Música."""
+"""Command-line interface for the Empório da Música agent."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ SESSION_FILE = PROJECT_DIR / ".session_history.json"
 
 
 def _load_session() -> list[dict[str, str]]:
-    """Carrega histórico da última sessão, se existir."""
+    """Load history from last session, if it exists."""
     if SESSION_FILE.exists():
         try:
             with SESSION_FILE.open("r", encoding="utf-8") as f:
@@ -26,13 +26,13 @@ def _load_session() -> list[dict[str, str]]:
 
 
 def _save_session(history: list[dict[str, str]]) -> None:
-    """Persiste o histórico da sessão atual."""
+    """Persist the current session history."""
     with SESSION_FILE.open("w", encoding="utf-8") as f:
         json.dump(history, f, ensure_ascii=False, indent=2)
 
 
 def _save_conversation(history: list[dict[str, str]]) -> None:
-    """Exporta a conversa atual para examples/ com timestamp."""
+    """Export current conversation to examples/ with timestamp."""
     EXAMPLES_DIR.mkdir(exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = EXAMPLES_DIR / f"conversa_{timestamp}.md"
@@ -50,7 +50,7 @@ def _save_conversation(history: list[dict[str, str]]) -> None:
 
 
 def main() -> None:
-    """Loop principal do CLI."""
+    """Main CLI loop."""
     print("=" * 70)
     print("🎵 Empório da Música — Assistente de Atendimento")
     print("=" * 70)

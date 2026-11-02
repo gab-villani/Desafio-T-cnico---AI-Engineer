@@ -1,4 +1,4 @@
-"""Orquestra o Gemini e as ferramentas determinísticas da Empório da Música."""
+"""Orchestrates Gemini and the deterministic tools for Empório da Música."""
 
 from __future__ import annotations
 
@@ -23,18 +23,18 @@ SDK_RETRY_ATTEMPTS = 1
 
 
 class AgentError(RuntimeError):
-    """Erro recuperável ao comunicar com o provedor do modelo."""
+    """Recoverable error when communicating with the model provider."""
 
 
 def _is_rate_limit_or_unavailable(error: Exception) -> bool:
-    """Detecta rate limit (429) ou indisponibilidade temporária (503)."""
+    """Detect rate limit (429) or temporary unavailability (503)."""
     status_code = getattr(error, "status_code", None) or getattr(error, "code", None)
     error_str = str(error).lower()
     return status_code in {429, 503} or "429" in error_str or "503" in error_str or "rate limit" in error_str or "service_unavailable" in error_str or "high demand" in error_str
 
 
 def _call_with_retry(call: Callable[[], Any]) -> Any:
-    """Executa chamada à API com no máximo duas tentativas para indisponibilidade temporária."""
+    """Execute API call with maximum two attempts for temporary unavailability."""
     for attempt in range(1, MAX_API_ATTEMPTS + 1):
         try:
             return call()
@@ -46,7 +46,7 @@ def _call_with_retry(call: Callable[[], Any]) -> Any:
 
 
 def _history_context(historico: list[dict[str, str]]) -> str:
-    """Converte somente mensagens textuais anteriores em contexto para a nova interação."""
+    """Convert only previous text messages into context for the new interaction."""
     if not historico:
         return ""
     lines = []
@@ -59,7 +59,7 @@ def _history_context(historico: list[dict[str, str]]) -> str:
 
 
 def _execute_tool(tools: StoreTools, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
-    """Executa somente funções declaradas; converte erros de argumentos em retorno ao modelo."""
+    """Execute only declared functions; convert argument errors into return to model."""
     function = getattr(tools, name, None)
     if not callable(function) or name.startswith("_"):
         return {"ok": False, "error": "Ferramenta solicitada não está disponível."}
@@ -70,15 +70,15 @@ def _execute_tool(tools: StoreTools, name: str, arguments: dict[str, Any]) -> di
 
 
 def responder(mensagem: str, historico: list[dict[str, str]] | None = None) -> str:
-    """Responde uma mensagem usando Gemini e tools; atualiza o histórico em memória recebido.
+    """Respond to a message using Gemini and tools; update the received in-memory history.
 
     Args:
-        mensagem: Texto atual do cliente.
-        historico: Lista mutável de mensagens no formato
-            ``[{"role": "user"|"assistant", "content": "..."}]``. Pode ser reutilizada entre turnos.
+        mensagem: Current customer text.
+        historico: Mutable list of messages in the format
+            ``[{"role": "user"|"assistant", "content": "..."}]``. Can be reused between turns.
 
     Returns:
-        Texto final pronto para ser exibido ao cliente.
+        Final text ready to be displayed to the customer.
     """
     if not mensagem or not mensagem.strip():
         return "Me conta como posso te ajudar com instrumentos, pedidos ou políticas da loja?"

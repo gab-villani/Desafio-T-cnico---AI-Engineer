@@ -1,4 +1,4 @@
-"""Carregamento e regras de dados da Empório da Música, sem alterar os CSVs."""
+"""Load and apply minimal data rules for Empório da Música operational data."""
 
 from __future__ import annotations
 
