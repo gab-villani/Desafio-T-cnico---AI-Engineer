@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 PROJECT_DIR = Path(__file__).resolve().parents[1]
-POLICIES_PATH = PROJECT_DIR / "políticas_da_loja.md"
+POLICIES_PATH = Path(__file__).resolve().parents[1] / "data" / "politicas_da_loja.md"
 
 PERSONA_AND_RULES = """
 Você é o assistente de atendimento por texto da Empório da Música, uma loja de instrumentos em Campo Grande/MS.

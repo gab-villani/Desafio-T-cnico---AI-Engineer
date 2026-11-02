@@ -9,7 +9,7 @@ import pandas as pd
 
 from src.data_loader import StoreData, calculate_payment_price, normalize_email, phone_matches
 
-POLICIES_PATH = Path(__file__).resolve().parents[1] / "políticas_da_loja.md"
+POLICIES_PATH = Path(__file__).resolve().parents[1] / "data" / "politicas_da_loja.md"
 
 
 def _records(frame: pd.DataFrame) -> list[dict[str, Any]]:
