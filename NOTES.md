@@ -32,6 +32,24 @@
 - Validações explícitas impedem IDs principais nulos/duplicados, referências órfãs, preços/estoques negativos e quantidades de itens de pedido não positivas. Falhas de integridade passam a interromper a inicialização em vez de gerar respostas potencialmente incorretas.
 - Nenhuma descrição, marca, modelo, nome de produto ou valor comercial foi alterado.
 
+## Fase A — Lacunas da inspeção
+
+- A inspeção foi ampliada em `scripts/inspect_data.py`, sem alterar os CSVs, para cobrir divergência de catálogo, notas e totais de pedidos, qualidade de clientes, promoções, outliers e validade dos cenários de demonstração.
+- Foram identificados 6 produtos com marca divergente entre nome e descrição/specs (IDs 135, 137, 139, 140, 142 e 144), equivalentes a 9,2% do catálogo.
+- Há um e-mail duplicado para dois clientes diferentes (`bruno.martins@jmail.com`), portanto a identidade é validada contra o cliente já associado ao pedido, e não por uma busca global de cliente.
+- Os pedidos 3 e 20 divergem da soma com preços atuais. Como os itens não têm preço histórico, `orders.total_brl` será preservado como fonte de verdade do pedido.
+- A janela de datas sugere `REFERENCE_DATE=2026-03-01` como data demonstrativa: há entrega estimada em 2026-02-28 dentro do prazo de 7 dias e entregas anteriores fora dele.
+
+## Fase B/C — Regras aprovadas e implementação
+
+- Disponibilidade: produto só é disponível quando `status == active` e `stock_quantity > 0`. Assim, o ID 96 permanece indisponível apesar de estar ativo; `coming_soon` não é vendido nem recebe promessa de prazo; `discontinued` não é disponível.
+- Promoção válida: somente `is_active == 1`. A ausência de datas de vigência impede qualquer afirmação de validade temporal. PIX dá 5% apenas sobre preço de tabela sem promoção; desconto PIX e promoção não acumulam.
+- `data_loader.py` cria, somente em memória, `is_available`, `active_promo_percent`, `final_price` e `catalog_inconsistent`. `final_price` representa o preço promocional ativo ou o preço de tabela, antes de uma eventual simulação de pagamento.
+- Para os 6 produtos de catálogo inconsistente, tools deverão omitir a descrição e incluir aviso para não citar detalhes não confirmados. Por decisão aprovada, `specs` continua disponível e é tratada como confiável; nome, preço e estoque seguem como fonte de verdade operacional.
+- `REFERENCE_DATE` é lida do `.env`, com padrão demonstrativo `2026-03-01`. Prazo de arrependimento usa 7 dias corridos a partir de `estimated_delivery` como proxy do recebimento, pois não há data real de entrega. Esta é uma suposição explícita.
+- Identidade é normalizada em memória com `email_norm` (trim/lower) e `phone_norm` (somente dígitos). Telefones são comparados pelos últimos 10 ou 11 dígitos. A falha deve gerar resposta genérica, sem revelar a existência do pedido.
+- Tracking e previsão de entrega ausentes são preservados como ausentes e nunca devem ser inventados.
+
 ### Uso de assistentes de código
 
 - Assistente utilizado para criar a estrutura inicial, arquivos de configuração e registrar decisões. As escolhas de arquitetura e a validação dos dados serão revisadas durante a implementação.
