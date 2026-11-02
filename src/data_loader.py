@@ -69,7 +69,7 @@ def calculate_payment_price(
     payment_method: str,
 ) -> float:
     """Calcula preço atual: PIX dá 5% somente quando não existe promoção ativa."""
-    if active_promo_percent is not None and active_promo_percent > 0:
+    if active_promo_percent is not None and not pd.isna(active_promo_percent) and active_promo_percent > 0:
         return round(float(list_price) * (1 - float(active_promo_percent) / 100), 2)
     if payment_method.strip().lower() == "pix":
         return round(float(list_price) * 0.95, 2)
