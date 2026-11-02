@@ -5,6 +5,9 @@ venv/
 # Environment and secrets
 .env
 
+# Session state
+.session_history.json
+
 # Python artifacts
 __pycache__/
 *.py[cod]

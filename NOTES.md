@@ -74,6 +74,13 @@
 - Diagnóstico inicial com logs temporários revelou a causa raiz da lentidão: modelos `gemini-3.8-flash` (HTTP 503, alta demanda após 35s), `gemini-2.5-flash` e `gemini-2.5-flash-lite` (HTTP 404, descontinuados para novos usuários) não estavam acessíveis. O modelo `gemini-3.5-flash-lite` foi validado e respondeu em ~6 segundos totais para a pergunta dos violões, incluindo function calling, execução da tool (7ms) e geração da resposta formatada.
 - Teste bem-sucedido: a pergunta "Quais violões disponíveis até R$ 1000?" acionou `buscar_produtos`, retornou 12 produtos e gerou resposta completa organizada por tipo de corda.
 
+## Passo 7 — Interface CLI
+
+- Criado `src/cli.py` com loop interativo de conversa, carregamento automático da sessão anterior e persistência em `.session_history.json` ao encerrar.
+- Comandos implementados: `/sair` para encerrar e `/salvar` para exportar a conversa em `examples/conversa_AAAAMMDD_HHMMSS.md` com formatação markdown, emojis e timestamp.
+- Tratamento de `AgentError` exibe mensagem amigável; erros inesperados preservam o histórico e permitem continuação.
+- Mensagem de boas-vindas informa os comandos disponíveis e a experiência de uso.
+
 ### Uso de assistentes de código
 
 - Assistente utilizado para criar a estrutura inicial, arquivos de configuração e registrar decisões. As escolhas de arquitetura e a validação dos dados serão revisadas durante a implementação.
@@ -81,3 +88,5 @@
 - Assistente utilizado para implementar o carregador tipado, suas validações de dados e a limpeza mínima documentada acima. A execução foi verificada localmente com os CSVs fornecidos.
 - Assistente utilizado para estruturar o prompt de sistema, incorporar o manual e enumerar ambiguidades para validação humana. As regras de atendimento foram derivadas do manual fornecido e das decisões explicitamente aprovadas durante o desenvolvimento.
 - Assistente utilizado para consultar a documentação oficial atual do SDK Gemini e implementar o loop de function calling, retry limitado e histórico em memória. A integração foi compilada localmente; a primeira chamada real excedeu o limite do ambiente e foi registrada como pendência de smoke test.
+- Assistente utilizado para diagnosticar a causa raiz da lentidão inicial: testou tools isoladas, conectividade, diferentes modelos Gemini e adicionou logs temporários de latência. Identificou HTTP 503/404 em modelos descontinuados e validou `gemini-3.5-flash-lite` como funcional. Removeu os logs após diagnóstico.
+- Assistente utilizado para implementar o CLI interativo com persistência de sessão, exportação de conversas e tratamento de erros.
