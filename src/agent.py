@@ -69,7 +69,7 @@ def _execute_tool(tools: StoreTools, name: str, arguments: dict[str, Any]) -> di
         return {"ok": False, "error": f"Não foi possível executar a consulta: {error}"}
 
 
-def responder(mensagem: str, historico: list[dict[str, str]] | None = None) -> str:
+def responder(mensagem: str, historico: list[dict[str, str]] | None = None, idioma: str = "pt-BR") -> str:
     """Respond to a message using Gemini and tools; update the received in-memory history.
 
     Args:
@@ -99,7 +99,7 @@ def responder(mensagem: str, historico: list[dict[str, str]] | None = None) -> s
         lambda: client.interactions.create(
             model=model,
             input=user_input,
-            system_instruction=build_system_prompt(),
+            system_instruction=build_system_prompt(idioma),
             tools=tool_definitions,
             timeout=60,
         )

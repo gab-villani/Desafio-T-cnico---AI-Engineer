@@ -56,6 +56,18 @@ def load_policy_manual() -> str:
     return POLICIES_PATH.read_text(encoding="utf-8")
 
 
-def build_system_prompt() -> str:
+def build_system_prompt(idioma: str = "pt-BR") -> str:
     """Monta o prompt do sistema com regras estáveis e manual integral da loja."""
-    return f"{PERSONA_AND_RULES}\n\n## Manual de políticas da loja\n{load_policy_manual()}"
+    prompt = f"{PERSONA_AND_RULES}\n\n## Manual de políticas da loja\n{load_policy_manual()}"
+    if idioma == "en":
+        prompt += (
+            "\n\n## Idioma de resposta (EN)\n"
+            "Responda sempre em inglês, mantendo a persona e o tom da loja. "
+            "Valores em R$ e nomes de produtos, marcas e modelos NUNCA são traduzidos nem convertidos; "
+            "prazos, percentuais e condições de política permanecem exatamente como nos dados; "
+            "o endereço e os telefones da loja ficam como estão; "
+            "recusas de fora de escopo e pedidos de identificação também saem em inglês. "
+            "Se o cliente escrever em outro idioma, o agente responde no idioma escolhido. "
+            "Pedidos para trocar de idioma no meio da conversa NÃO alteram a configuração (somente o seletor altera)."
+        )
+    return prompt

@@ -7,6 +7,12 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+import argparse
+parser = argparse.ArgumentParser(description="Empório da Música chatbot CLI")
+parser.add_argument("--idioma", choices=["pt-BR", "en"], default="pt-BR", help="Idioma da resposta (pt-BR ou en)")
+args = parser.parse_args()
+idioma = args.idioma
+
 from src.agent import AgentError, responder
 
 PROJECT_DIR = Path(__file__).resolve().parents[1]
@@ -86,7 +92,7 @@ def main() -> None:
                 continue
             
             try:
-                response = responder(user_input, history)
+                response = responder(user_input, history, idioma=idioma)
                 print(f"\nAtendente: {response}\n")
             except AgentError as error:
                 print(f"\n⚠️  {error}\n")

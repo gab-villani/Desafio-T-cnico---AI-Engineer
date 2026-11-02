@@ -1,3 +1,7 @@
+import sys
+from pathlib import Path
+# Add project root to sys.path so that 'src' can be imported when running from ui/
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import streamlit as st
 from src.agent import responder
 
@@ -10,7 +14,7 @@ def main():
     # Botão para iniciar nova conversa
     if st.button("Nova conversa"):
         st.session_state.history = []
-        st.experimental_rerun()
+        st.rerun()
 
     # Campo de entrada (chat_input) – disponível a partir do Streamlit 1.30
     user_msg = st.chat_input("Digite sua mensagem")
