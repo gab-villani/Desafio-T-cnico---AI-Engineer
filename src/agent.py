@@ -101,7 +101,7 @@ def responder(mensagem: str, historico: list[dict[str, str]] | None = None) -> s
             input=user_input,
             system_instruction=build_system_prompt(),
             tools=tool_definitions,
-            timeout=30,
+            timeout=60,
         )
     )
 
@@ -127,7 +127,7 @@ def responder(mensagem: str, historico: list[dict[str, str]] | None = None) -> s
                 input=function_results,
                 previous_interaction_id=interaction.id,
                 tools=tool_definitions,
-                timeout=30,
+                timeout=60,
             )
         )
 
