@@ -22,7 +22,18 @@
 - Todas as relações verificadas estão íntegras, sem referências órfãs: promoções-produtos, produtos-categorias, pedidos-clientes e itens-pedidos/produtos.
 - Qualidade semântica observada para revisão humana, sem alteração automática: alguns títulos e descrições de catálogo divergem em marca/modelo (por exemplo, `Music Man Bass 1X Electric Bass` descreve um Fender Jazz Bass). Os dados serão preservados como fornecidos.
 
+## Passo 3 — Carregamento e limpeza mínima
+
+- Criado `src/data_loader.py`, com `load_data()` e o contêiner imutável `StoreData` para separar o acesso aos CSVs das ferramentas e da interface.
+- Espaços nas extremidades são removidos apenas de valores textuais. Embora a inspeção não tenha achado ocorrências, o tratamento previne diferenças acidentais em buscas futuras.
+- `created_at`, `order_date` e `estimated_delivery` foram convertidos para datas; valores ausentes em `estimated_delivery` são preservados como ausentes, pois o relatório mostrou que são esperados em pedidos ainda não enviados ou cancelados.
+- `promotions.is_active` é convertido para booleano. Como não existem datas de vigência, nenhuma promoção é inferida como vencida além do sinalizador fornecido.
+- Criada a coluna derivada `products.is_available`: `True` somente para `status == active` e `stock_quantity > 0`. O carregamento atual resulta em 61 produtos disponíveis; itens `discontinued`, `coming_soon` ou com estoque zero não serão ofertados.
+- Validações explícitas impedem IDs principais nulos/duplicados, referências órfãs, preços/estoques negativos e quantidades de itens de pedido não positivas. Falhas de integridade passam a interromper a inicialização em vez de gerar respostas potencialmente incorretas.
+- Nenhuma descrição, marca, modelo, nome de produto ou valor comercial foi alterado.
+
 ### Uso de assistentes de código
 
 - Assistente utilizado para criar a estrutura inicial, arquivos de configuração e registrar decisões. As escolhas de arquitetura e a validação dos dados serão revisadas durante a implementação.
 - Assistente utilizado para criar e executar o script de inspeção, consolidar o relatório dos CSVs brutos e registrar os achados. Nenhum dado foi modificado nesta etapa.
+- Assistente utilizado para implementar o carregador tipado, suas validações de dados e a limpeza mínima documentada acima. A execução foi verificada localmente com os CSVs fornecidos.
