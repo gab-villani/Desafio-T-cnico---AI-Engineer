@@ -50,8 +50,23 @@
 - Identidade é normalizada em memória com `email_norm` (trim/lower) e `phone_norm` (somente dígitos). Telefones são comparados pelos últimos 10 ou 11 dígitos. A falha deve gerar resposta genérica, sem revelar a existência do pedido.
 - Tracking e previsão de entrega ausentes são preservados como ausentes e nunca devem ser inventados.
 
+## Passo 5 — Prompt do sistema e ambiguidades do manual
+
+- Criado `src/prompts.py`. `build_system_prompt()` reúne a persona, regras operacionais obrigatórias e o manual completo, que é pequeno o suficiente para entrar no contexto sem RAG.
+- O prompt obriga consulta de tools antes de informar preço, promoção, estoque, disponibilidade, prazo, rastreio ou situação de pedido. Também proíbe cálculos mentais de desconto e parcelamento.
+- Produtos esgotados, futuros e descontinuados receberam instruções explícitas: oferecer alternativas apenas depois de consultar catálogo; não prometer reposição/prazo; não vender `coming_soon`.
+- O prompt exige preço original, percentual e preço final em promoções ativas e orienta transparência para campanha inativa. Também orienta a omitir detalhes de descrição quando a tool sinalizar `catalog_notice`.
+- Reclamações: como o protótipo não possui ferramenta de persistência/encaminhamento, o agente deve acolher, informar retorno em até 24 horas úteis, solicitar detalhes e explicar que a equipe precisa formalizar o registro — sem fingir que registrou.
+- Escalonamento humano: divergência de catálogo, exceção/ambiguidade de política, combinação de pagamentos, garantia que exige análise técnica, reclamações e dados de prazo/estoque ausentes.
+- Contradições identificadas no manual:
+  1. Telefone geral no cabeçalho/dados da empresa: `(67) 3341-4444`; WhatsApp de atendimento remoto: `(67) 3321-4500`.
+  2. E-mail: `contato@emporiodamusica.com.br` no cabeçalho e `contato@empóriodamusica.com.br` na tabela de dados da empresa.
+  3. Garantia legal: 90 dias a partir do recebimento; troca por defeito: 30 dias após a compra.
+- Comportamento proposto para as contradições: não afirmar um único telefone/e-mail como definitivo; apresentar o canal adequado ao contexto (WhatsApp remoto quando a pergunta for sobre WhatsApp), mencionar a divergência caso seja necessário passar um contato e oferecer confirmação com a equipe. Para defeito/garantia, separar expressamente a janela de troca de 30 dias da garantia legal de 90 dias e encaminhar casos concretos para confirmação humana.
+
 ### Uso de assistentes de código
 
 - Assistente utilizado para criar a estrutura inicial, arquivos de configuração e registrar decisões. As escolhas de arquitetura e a validação dos dados serão revisadas durante a implementação.
 - Assistente utilizado para criar e executar o script de inspeção, consolidar o relatório dos CSVs brutos e registrar os achados. Nenhum dado foi modificado nesta etapa.
 - Assistente utilizado para implementar o carregador tipado, suas validações de dados e a limpeza mínima documentada acima. A execução foi verificada localmente com os CSVs fornecidos.
+- Assistente utilizado para estruturar o prompt de sistema, incorporar o manual e enumerar ambiguidades para validação humana. As regras de atendimento foram derivadas do manual fornecido e das decisões explicitamente aprovadas durante o desenvolvimento.
