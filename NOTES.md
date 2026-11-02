@@ -64,9 +64,19 @@
   3. Garantia legal: 90 dias a partir do recebimento; troca por defeito: 30 dias após a compra.
 - Comportamento proposto para as contradições: não afirmar um único telefone/e-mail como definitivo; apresentar o canal adequado ao contexto (WhatsApp remoto quando a pergunta for sobre WhatsApp), mencionar a divergência caso seja necessário passar um contato e oferecer confirmação com a equipe. Para defeito/garantia, separar expressamente a janela de troca de 30 dias da garantia legal de 90 dias e encaminhar casos concretos para confirmação humana.
 
+## Passo 6 — Orquestração com Gemini e function calling
+
+- Consultada a documentação oficial do Google Gemini para function calling com o SDK `google-genai`. A implementação usa `genai.Client(api_key=...)` e `client.interactions.create(...)`, enviando declarações com `type: function`; resultados são devolvidos como passos `function_result` com `name`, `call_id` e JSON de resultado.
+- Criado `src/agent.py` com a função pública `responder(mensagem, historico)`. A interface permanece desacoplada: recebe e atualiza uma lista de histórico textual em memória, permitindo troca futura do CLI sem modificar o agente.
+- O loop executa as funções solicitadas pelo modelo em `StoreTools`, devolve seus resultados ao Gemini e tem limite de 6 iterações para evitar loops infinitos. Funções desconhecidas ou argumentos inválidos retornam erro estruturado ao modelo.
+- O modelo e a chave são lidos de `GEMINI_MODEL` e `GEMINI_API_KEY`; se ausentes, o agente falha com mensagem de configuração clara sem expor segredos.
+- Chamadas da API têm até 3 tentativas para rate limit (HTTP 429), com backoff exponencial limitado de 1s e 2s. Chamadas possuem timeout de 30s; outros erros são convertidos em mensagem recuperável ao chamador.
+- O teste de compilação e fluxo de mensagem vazia passou. A chamada real ao Gemini excedeu 120 segundos no ambiente de desenvolvimento antes de qualquer resposta. Isso será repetido no smoke test após o CLI, com observação de modelo/chave/limite caso persista.
+
 ### Uso de assistentes de código
 
 - Assistente utilizado para criar a estrutura inicial, arquivos de configuração e registrar decisões. As escolhas de arquitetura e a validação dos dados serão revisadas durante a implementação.
 - Assistente utilizado para criar e executar o script de inspeção, consolidar o relatório dos CSVs brutos e registrar os achados. Nenhum dado foi modificado nesta etapa.
 - Assistente utilizado para implementar o carregador tipado, suas validações de dados e a limpeza mínima documentada acima. A execução foi verificada localmente com os CSVs fornecidos.
 - Assistente utilizado para estruturar o prompt de sistema, incorporar o manual e enumerar ambiguidades para validação humana. As regras de atendimento foram derivadas do manual fornecido e das decisões explicitamente aprovadas durante o desenvolvimento.
+- Assistente utilizado para consultar a documentação oficial atual do SDK Gemini e implementar o loop de function calling, retry limitado e histórico em memória. A integração foi compilada localmente; a primeira chamada real excedeu o limite do ambiente e foi registrada como pendência de smoke test.
