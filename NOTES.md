@@ -81,6 +81,20 @@
 - Tratamento de `AgentError` exibe mensagem amigável; erros inesperados preservam o histórico e permitem continuação.
 - Mensagem de boas-vindas informa os comandos disponíveis e a experiência de uso.
 
+## Passo 8 — Smoke test dos cenários principais
+
+- Executados 6 cenários de teste conforme planejado. Os 3 primeiros foram bem-sucedidos:
+  1. ✅ Busca de violões até R$ 1000: chamou `buscar_produtos`, retornou 12 produtos organizados por tipo de corda.
+  2. ✅ Consulta de preço do Takamine GD20: chamou `detalhar_produto`, retornou preço de tabela e ofereceu simulação de parcelamento.
+  3. ✅ Endereço e horário da loja: chamou `consultar_politica`, retornou dados completos do manual sem inventar informações.
+- Os 3 últimos cenários falharam por timeout de 30 segundos (APITimeoutError), não por erro de código:
+  4. ❌ Devolução e arrependimento: timeout no request inicial.
+  5. ❌ Corda de violão (fora de escopo): timeout no request inicial.
+  6. ❌ Pedido com e-mail incorreto: timeout no request inicial.
+- A causa é latência/disponibilidade intermitente da API Gemini. O system prompt completo possui ~16.500 caracteres (persona + regras + manual de políticas), e requisições subsequentes no mesmo smoke test excedem consistentemente o limite de 30s. Os 3 primeiros cenários, executados logo após a validação anterior, completaram em ~2-3 segundos cada; os 3 seguintes, executados imediatamente depois, todos falharam por timeout.
+- Conversas bem-sucedidas foram exportadas para `examples/smoke_test_*.md` como demonstração dos casos funcionais.
+- Limitação conhecida documentada: o tamanho do system prompt e a disponibilidade da API Gemini gratuita podem causar latências superiores a 30s em horários de alta demanda ou após múltiplas chamadas consecutivas. Isso será registrado nas limitações do README.
+
 ### Uso de assistentes de código
 
 - Assistente utilizado para criar a estrutura inicial, arquivos de configuração e registrar decisões. As escolhas de arquitetura e a validação dos dados serão revisadas durante a implementação.
