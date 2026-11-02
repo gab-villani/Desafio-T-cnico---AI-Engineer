@@ -1,302 +1,303 @@
-# Empório da Música — AI Customer Service Agent
+# Empório da Música - Agente de Atendimento
 
-AI-powered conversational agent prototype for **Empório da Música**, a fictional music instrument store in Campo Grande/MS, Brazil.
+Protótipo de agente de atendimento por texto para a loja fictícia "Empório da Música" (Campo Grande/MS), desenvolvido como parte de desafio técnico para AI Engineer.
 
-> **Technical Challenge:** AI Engineer position at Artefact  
-> **Development Time:** 2 days  
-> **Day 1 Status:** Core implementation complete with function calling, deterministic tools, and CLI interface.
+## Como Rodar
 
----
+### Pré-requisitos
+- Python 3.11 ou superior
+- Chave de API do Google AI Studio (Gemini)
 
-## Table of Contents
-
-- [Quick Start](#quick-start)
-- [Architecture & Technical Decisions](#architecture--technical-decisions)
-- [Project Structure](#project-structure)
-- [Features](#features)
-- [Known Limitations](#known-limitations)
-- [AI Assistant Usage](#ai-assistant-usage)
-- [Development Log](#development-log)
-
----
-
-## Quick Start
-
-### Prerequisites
-
-- Python 3.11+
-- Google AI Studio API key ([get one free](https://aistudio.google.com/apikey))
-
-### Installation
+### Instalação
 
 ```bash
-# Clone and navigate to the project
-cd "Desafio Técnico - AI Engineer"
+# 1. Clone o repositório
+git clone <url-do-repo>
+cd emporio-agent
 
-# Create virtual environment
+# 2. Crie e ative o ambiente virtual
 python -m venv .venv
+.venv\Scripts\activate  # Windows
+# source .venv/bin/activate  # Linux/Mac
 
-# Activate virtual environment
-# Windows PowerShell:
-.\.venv\Scripts\Activate.ps1
-# Unix/macOS:
-source .venv/bin/activate
-
-# Install dependencies
+# 3. Instale as dependências
 pip install -r requirements.txt
 
-# Configure environment
+# 4. Configure as variáveis de ambiente
 cp .env.example .env
-# Edit .env and add your GEMINI_API_KEY
+# Edite .env e adicione sua GEMINI_API_KEY
 ```
 
-### Running the Agent
+### Execução
 
 ```bash
-# Start interactive CLI
-python -m src.cli
-
-# Available commands:
-# /sair   - Exit
-# /salvar - Save conversation to examples/
+python src/cli.py
 ```
 
----
+**Comandos disponíveis:**
+- Digite suas perguntas normalmente
+- `/sair` - Encerra o chat (histórico salvo automaticamente)
+- `/salvar` - Exporta a conversa atual para `examples/`
 
-## Architecture & Technical Decisions
+### Configuração
 
-### Why Function Calling Over RAG?
-
-**Decision:** Deterministic function calling on structured CSV data using pandas.
-
-**Rationale:**
-- **Operational data is structured:** Products, orders, customers, and promotions fit naturally into relational tables
-- **Deterministic queries required:** Price calculations, stock checks, and order lookups must be exact, not approximate
-- **Policy manual is small:** ~12KB fits entirely in the system prompt without retrieval overhead
-- **No semantic search needed:** Queries are factual lookups (price, stock, order status), not similarity searches
-- **Simpler stack:** No vector database, embeddings, or chunking strategy required
-
-RAG would add complexity without benefits for this use case.
-
-### Why Gemini Over Other LLMs?
-
-**Decision:** Google Gemini via free tier API.
-
-**Rationale:**
-- **Free tier availability:** Generous token limits for prototyping
-- **Official SDK:** `google-genai` with native function calling support
-- **Configurable model:** `GEMINI_MODEL` env var allows switching between Flash variants as availability changes
-- **Latency:** 2-6 seconds for complete requests including function calls (when API is responsive)
-
-**Model Evolution:** Initially targeted `gemini-2.5-flash-lite`, but it was deprecated. Validated `gemini-3.5-flash-lite` as stable alternative.
-
-### Why Direct CSV Access Over SQL?
-
-**Decision:** Pandas DataFrames loaded at startup.
-
-**Rationale:**
-- **Dataset size:** 65 products, 50 customers, 20 orders — fits easily in memory
-- **No text-to-SQL risk:** LLM-generated SQL can produce incorrect queries or security issues
-- **Type safety:** Python functions with explicit signatures catch errors at runtime
-- **Simplicity:** No database setup, schema migrations, or connection pooling
-- **Performance:** In-memory pandas operations complete in <10ms
-
-### System Prompt Strategy
-
-**Decision:** Persona + rules + full policy manual (~16.5K chars) in system instruction.
-
-**Rationale:**
-- **Consistency:** Rules are always applied, not retrieved probabilistically
-- **No hallucination on policies:** Manual text is explicit, not paraphrased by the model
-- **Mandatory tool usage:** Prompt enforces calling tools before stating prices/stock
-- **Ambiguity handling:** Explicitly documents manual contradictions (phone numbers, guarantee periods)
-
-**Tradeoff:** Large prompt increases latency during high API demand.
-
----
-
-## Project Structure
-
-```
-emporio-agent/
-├── data/
-│   ├── politicas_da_loja.md              # Store policy manual
-│   ├── desafio_tecnico_ai_eng - *.csv    # Operational data (products, orders, etc.)
-│   └── .gitkeep
-├── src/
-│   ├── __init__.py
-│   ├── data_loader.py    # Load CSVs, derive rules (availability, promotions)
-│   ├── tools.py          # Deterministic functions callable by LLM
-│   ├── prompts.py        # System prompt with persona and policies
-│   ├── agent.py          # Gemini orchestration with function calling loop
-│   └── cli.py            # Interactive terminal interface
-├── scripts/
-│   └── inspect_data.py   # Data quality report (run before cleaning)
-├── tests/
-│   └── test_data_rules.py
-├── examples/
-│   └── smoke_test_*.md   # Sample conversations
-├── NOTES.md              # Development decisions and AI assistant usage log
-├── README.md             # This file (English)
-├── README_PT.md          # Portuguese version
-├── requirements.txt
-├── .env.example
-└── .gitignore
-```
-
----
-
-## Features
-
-### Conversational Agent
-
-- **Persona:** Informal but professional tone, like "a friend who knows music"
-- **Scope enforcement:** Declines accessories (strings, picks, cables, pedals, amps)
-- **Mandatory tool usage:** Never invents prices, stock, or delivery times
-- **LGPD-compliant:** Order lookup validates customer identity before exposing data
-
-### Deterministic Tools
-
-| Tool | Purpose |
-|---|---|
-| `buscar_produtos` | Search instruments by name, category, price range |
-| `detalhar_produto` | Get current price, stock, promo, and specs |
-| `listar_promocoes_ativas` | List active promotions on available products |
-| `consultar_pedido` | Fetch order details after identity verification |
-| `calcular_preco` | Calculate price with payment method rules (PIX discount, installments) |
-| `consultar_politica` | Extract relevant section from policy manual |
-
-### Business Rules (Applied in Code)
-
-- **Availability:** `status == "active" AND stock_quantity > 0`
-- **PIX discount:** 5% off list price, does NOT stack with active promotions
-- **Installment limits:**
-  - 1-3x: minimum R$50/installment
-  - 4-6x: minimum R$80/installment
-  - 7-12x: minimum R$100/installment
-- **Return period:** 7 days from `estimated_delivery` (proxy for actual delivery date)
-- **Catalog inconsistencies:** 6 products flagged; agent omits description for these items
-
----
-
-## Known Limitations
-
-### 1. API Latency Under High Demand
-
-**Issue:** `gemini-3.5-flash-lite` can timeout (>30s) during peak usage.
-
-**Evidence:** Smoke test scenarios 4-6 failed with `APITimeoutError` immediately after scenarios 1-3 succeeded in 2-3s each.
-
-**Root cause:** Large system prompt (~16.5K chars) + free tier rate limiting.
-
-**Mitigation:** Retry logic with exponential backoff handles HTTP 429/503. Production would require paid tier or prompt optimization.
-
-### 2. Missing Historical Order Prices
-
-**Issue:** `order_items.csv` has no `unit_price` column.
-
-**Impact:** 2 of 20 orders show discrepancy between `total_brl` and sum of current product prices (likely historical promos).
-
-**Decision:** Preserve `orders.total_brl` as source of truth; don't recalculate past orders with current prices.
-
-### 3. Ambiguous Manual Data
-
-**Issue:** Policy manual contains contradictions:
-- Phone: `(67) 3341-4444` (general) vs `(67) 3321-4500` (WhatsApp)
-- Email: `contato@emporiodamusica.com.br` vs `contato@empóriodamusica.com.br`
-- Warranty: 90 days legal guarantee vs 30 days for defect exchange
-
-**Decision:** Agent does NOT choose silently. It presents both values and offers escalation to staff for confirmation.
-
-### 4. Proxy for Delivery Date
-
-**Issue:** No `actual_delivery_date` in data.
-
-**Decision:** Use `estimated_delivery` as proxy for return period calculation. Documented as assumption in code and NOTES.md.
-
-### 5. Discontinued Models
-
-**Issue:** Several Gemini models (`2.5-flash`, `2.5-flash-lite`, `3.8-flash`) returned HTTP 404/503 during development.
-
-**Resolution:** Validated `gemini-3.5-flash-lite` as stable. Model name is configurable via `GEMINI_MODEL` env var.
-
----
-
-## AI Assistant Usage
-
-This project was developed with **AI assistant support (Kiro/Claude)** for:
-
-1. **Initial setup** and project scaffolding
-2. **Data inspection script** with quality checks and referential integrity validation
-3. **CSV loader** with derived columns (availability, promotions, price calculations)
-4. **Gemini SDK research** and function calling implementation
-5. **Root cause diagnosis** of initial 120s timeout (tested tools independently, validated connectivity, identified deprecated models)
-6. **CLI implementation** with session persistence and Markdown export
-
-### What the Assistant Did NOT Do
-
-- **Architecture decisions:** Human chose function calling over RAG, pandas over SQL, Gemini over alternatives
-- **Business rules:** Human defined availability logic, PIX non-accumulation, installment thresholds
-- **Manual ambiguities:** Human identified contradictions and decided on transparent handling
-- **Smoke test design:** Human specified the 6 scenarios and acceptance criteria
-
-### Development Workflow
-
-1. Human provides requirements and decides approach
-2. Assistant implements code, handles SDK details, writes tests
-3. Human validates behavior, requests corrections, approves commits
-4. Assistant documents decisions in `NOTES.md` after each step
-
-This mirrors real-world usage: AI accelerates execution, human drives strategy.
-
----
-
-## Development Log
-
-| Step | Deliverable | Status |
-|---:|---|:---:|
-| 1 | Project setup, venv, requirements | ✅ |
-| 2 | Data inspection script (`scripts/inspect_data.py`) | ✅ |
-| 3 | Data loader with rules (`src/data_loader.py`) | ✅ |
-| 4 | Deterministic tools (`src/tools.py`) | ✅ |
-| 5 | System prompt with policies (`src/prompts.py`) | ✅ |
-| 6 | Gemini agent with function calling (`src/agent.py`) | ✅ |
-| 7 | Interactive CLI (`src/cli.py`) | ✅ |
-| 8 | Smoke test (3/6 scenarios validated) | ⚠️ |
-| 9 | Documentation (this README) | ✅ |
-
-**Day 1 complete.** Core agent functional with validated function calling on real queries.
-
----
-
-## Testing
-
-### Run Data Rules Tests
+Edite o arquivo `.env`:
 
 ```bash
-python -m unittest tests/test_data_rules.py -v
+GEMINI_API_KEY=sua_chave_aqui
+GEMINI_MODEL=gemini-3.5-flash-lite  # ou outro modelo disponível
+REFERENCE_DATE=2026-03-01  # data de referência para testes de prazo
 ```
 
-### Smoke Test Results
-
-See `examples/smoke_test_*.md` for validated scenarios:
-
-1. ✅ Search for guitars under R$1000 → 12 results returned
-2. ✅ Price inquiry for Takamine GD20 → Correct price with payment options offered
-3. ✅ Store address and hours → Correct data from policy manual
-
-Scenarios 4-6 (return policy, out-of-scope item, LGPD-protected order) timed out due to API latency, not code errors.
+**Nota:** O modelo `gemini-2.5-flash-lite` foi descontinuado. Use `gemini-3.5-flash-lite` ou consulte a [documentação oficial](https://ai.google.dev/gemini-api/docs/models/gemini) para modelos disponíveis.
 
 ---
 
-## License
+## Decisões Técnicas e Justificativas
 
-Educational project for technical challenge evaluation.
+### Arquitetura
+
+**Function Calling Determinístico**
+- LLM (Gemini) orquestra QUANDO chamar cada função
+- Funções Python executam lógica de negócio e cálculos
+- Sem RAG: manual de políticas (~3KB) entra no system prompt
+- Sem text-to-SQL: pandas para CSVs (dataset pequeno, 65 produtos)
+
+**Justificativa:** Para um protótipo com dados pequenos e regras claras, function calling oferece controle total sobre cálculos (preço, desconto, parcelamento) e evita alucinações matemáticas do LLM.
+
+### Separação de Responsabilidades
+
+```
+src/
+  data_loader.py  → Carrega CSVs e aplica regras derivadas
+  tools.py        → 6 funções chamáveis pelo LLM (busca, preço, pedido, políticas)
+  prompts.py      → System prompt com persona + manual completo
+  agent.py        → Loop de function calling + histórico
+  cli.py          → Interface de terminal (desacoplada)
+```
+
+**Justificativa:** A função `responder(mensagem, historico)` é independente do CLI, permitindo trocar a interface (web, API REST) sem modificar a lógica do agente.
+
+### Tools Implementadas
+
+1. **buscar_produtos**: Filtros por nome, categoria, preço. Retorna preço final (após promoção ativa).
+2. **detalhar_produto**: Specs completas, promoção ativa, estoque.
+3. **listar_promocoes_ativas**: Apenas promoções com `is_active=1`.
+4. **calcular_preco**: Aplica desconto PIX, valida parcelas mínimas.
+5. **consultar_pedido**: **Validação LGPD** - só retorna dados se e-mail/telefone bater com o cliente do pedido.
+6. **consultar_politica**: Busca seção relevante do manual (trocas, frete, garantia, horários).
+
+### Regras de Negócio (Implementadas em Código)
+
+- **Disponibilidade:** `status == "active" AND stock_quantity > 0`
+- **PIX:** 5% de desconto sobre preço de tabela, **NÃO acumula** com promoção ativa
+- **Parcelamento:** Sem juros, parcela mínima R$ 50 (1-3x), R$ 80 (4-6x), R$ 100 (7-12x)
+- **Promoção ativa:** Apenas `is_active == 1` (CSV não tem datas de vigência)
+- **Arrependimento:** 7 dias corridos após `estimated_delivery` (proxy do recebimento)
+
+**Justificativa:** Cálculos em Python garantem precisão. LLM nunca faz contas de desconto/parcelamento.
+
+### Tratamento de Erros
+
+- **Rate limit (429) / Indisponibilidade (503):** Até 2 tentativas com backoff exponencial (1s)
+- **Timeout:** 30s por chamada à API
+- **Loop infinito:** Máximo 10 iterações de function calling (evita loops)
+- **LGPD:** Resposta genérica idêntica para pedido inexistente OU e-mail errado
+
+### Persona e Escopo
+
+**Persona:** Informal mas profissional, acolhedora, "como um amigo que entende de música".
+
+**Escopo:**
+- ✅ Violões, pianos, baterias, teclados, ukuleles, guitarras, baixos
+- ❌ Acessórios (cordas, palhetas, cabos, cases, pedais, amplificadores)
+- ❌ Temas fora do domínio (receitas, política, opinião médica/jurídica)
+
+**Reclamações:** Acolhe, pede detalhes, informa retorno em 24h úteis, **não finge** que registrou (protótipo sem persistência).
 
 ---
 
-## Contact
+## Limitações Conhecidas
 
-**Challenge:** AI Engineer @ Artefact  
-**Candidate:** [Your name]  
-**Date:** November 2026
+### 1. Latência Alta (18-70 segundos)
+**Causa:** System prompt grande (~16.5k caracteres) + API gratuita do Gemini + horários de alta demanda.  
+**Impacto:** Inviável para produção. Usuários esperam <3s.  
+**Mitigação futura:** Cachear políticas no contexto, usar modelo pago com SLA, ou RAG para manual.
+
+### 2. Contradições no Manual Não Resolvidas
+**Encontradas:**
+- Telefone: (67) 3341-4444 vs WhatsApp (67) 3321-4500
+- E-mail: com e sem acentos (emporiodamusica vs empóriodamusica)
+- Garantia: troca 30 dias vs legal 90 dias
+
+**Solução implementada (não ideal):** Agente apresenta ambos os dados sem escolher, menciona divergência se necessário, e encaminha para humano em casos concretos.  
+**Ideal:** Validar fonte oficial com stakeholder.
+
+### 3. Histórico Não Persistente Entre Sessões
+Histórico salvo em `.session_history.json` é carregado ao iniciar CLI, mas não há histórico global nem análise de conversas anteriores.
+
+### 4. Produtos com Catálogo Inconsistente
+6 produtos (9,2%) têm marca no nome diferente da marca na descrição/specs.  
+**Exemplo:** "Music Man Bass 1X" descreve um "Fender Jazz Bass".  
+**Solução:** Marcados com `catalog_inconsistent=True`; descrição omitida, specs preservadas.  
+**Ideal:** Corrigir fonte de dados.
+
+### 5. Sem Preço Histórico
+Pedidos armazenam `total_brl` mas os itens não têm `price_at_order`. Impossível validar se total está correto.  
+**Impacto:** 2 pedidos divergem da soma com preços atuais (IDs 3 e 20).
+
+### 6. Data de Referência Arbitrária
+`REFERENCE_DATE=2026-03-01` foi escolhida arbitrariamente para cálculos de arrependimento. CSV tem `estimated_delivery`, não data real de entrega.
+
+### 7. Sem Integração Real
+Não há persistência de reclamações, envio de e-mail, integração com ERP/estoque, nem atualização de pedidos.
+
+---
+
+## Suposições Feitas (Não Aprovadas Previamente)
+
+Estas decisões foram tomadas durante o desenvolvimento sem aprovação explícita:
+
+### 1. PIX Não Acumula com Promoção
+**Justificativa:** Prática comum em varejo.  
+**Alternativa:** Permitir acúmulo (melhor para o cliente, pior para margem).
+
+### 2. Parcelas Mínimas
+- 1-3x: R$ 50/parcela
+- 4-6x: R$ 80/parcela
+- 7-12x: R$ 100/parcela
+
+**Justificativa:** Padrão de mercado.  
+**Impacto:** Produtos baratos não podem ser parcelados em muitas vezes.
+
+### 3. Normalização de E-mail/Telefone
+- E-mail: remove acentos, espaços, lowercase
+- Telefone: extrai últimos 10-11 dígitos
+
+**Justificativa:** Permitir flexibilidade de formato na consulta de pedidos (LGPD).  
+**Alternativa:** Exigir formato exato (mais restritivo).
+
+### 4. Produtos Inconsistentes Têm Descrição Omitida
+6 produtos com divergência marca recebem aviso ao invés de descrição potencialmente enganosa.  
+**Specs técnicas preservadas** (consideradas confiáveis).
+
+### 5. Arrependimento Usa `estimated_delivery` + 7 Dias
+CSV não tem data real de entrega. Usamos `estimated_delivery` como proxy.  
+**Ideal:** Integrar com transportadora para data real de entrega.
+
+### 6. Tratamento de Contradições do Manual
+- Telefones: apresentar ambos sem escolher
+- E-mail: normalizar para versão sem acento
+- Garantia: separar troca 30 dias de garantia legal 90 dias
+
+**Ideal:** Validar dados oficiais com equipe da loja.
+
+---
+
+## Uso de Assistentes de Código
+
+Este projeto foi desenvolvido com auxílio de assistente de IA (Kiro/Claude). Abaixo, o que foi gerado e o que foi corrigido:
+
+### Gerado pelo Assistente
+- ✅ Estrutura inicial de pastas e arquivos de configuração
+- ✅ Script de inspeção de dados (`scripts/inspect_data.py`)
+- ✅ Implementação de `data_loader.py` com validações
+- ✅ Implementação das 6 tools em `tools.py`
+- ✅ System prompt inicial em `prompts.py`
+- ✅ Loop de function calling em `agent.py`
+- ✅ Interface CLI com persistência em `cli.py`
+- ✅ Smoke tests e testes adversariais
+
+### Corrigido Manualmente
+- ❌ **Afirmações falsas no resumo inicial:**
+  - Disse "preços como string" → CSVs já tinham float64
+  - Disse "promoções vencidas" → CSV não tem datas, apenas `is_active`
+  - Disse status "esgotado" → Não existe; o correto é "active com stock_quantity=0"
+- ❌ **Modelo Gemini:** Inicialmente configurado com `gemini-2.5-flash-lite` (descontinuado), corrigido para `gemini-3.5-flash-lite`
+- ✅ **Contradições do manual:** Assistente identificou e documentou, mas decisão de tratamento foi explicitada como "não aprovada"
+
+### Processo de Validação
+1. Assistente propôs implementação
+2. Usuário solicitou auditoria com evidências brutas
+3. Assistente corrigiu afirmações falsas e documentou suposições
+4. Smoke tests executados com API real (sem mocks)
+5. Testes adversariais para validar robustez
+
+---
+
+## Estrutura de Dados
+
+### CSVs Fornecidos
+- `products.csv` (65 produtos)
+- `categories.csv` (9 categorias)
+- `customers.csv` (50 clientes)
+- `orders.csv` (20 pedidos)
+- `order_items.csv` (22 itens de pedido)
+- `promotions.csv` (25 promoções)
+- `politicas_da_loja.md` (manual de políticas)
+
+### Colunas Derivadas (em Memória)
+
+**products:**
+- `is_available` = `(status == "active") AND (stock_quantity > 0)`
+- `active_promo_percent` = % de desconto da promoção ativa mais recente
+- `final_price` = preço após promoção ativa (ou `list_price` se não houver)
+- `catalog_inconsistent` = `True` se categoria X specs divergem
+
+**customers:**
+- `email_norm` = e-mail normalizado (sem acentos, lowercase)
+- `phone_norm` = telefone normalizado (últimos 10-11 dígitos)
+
+---
+
+## Testes
+
+### Smoke Tests (6 cenários básicos)
+✅ Todos passaram com API real Gemini
+
+1. Busca de violões até R$ 1000
+2. Consulta de preço específico (Takamine GD20)
+3. Endereço e horário da loja
+4. Política de devolução por arrependimento
+5. Recusa de produto fora de escopo (corda de violão)
+6. Consulta de pedido com e-mail incorreto (LGPD)
+
+**Evidências completas:** Ver `SMOKE_TESTS_EVIDENCIAS.md`
+
+### Testes Adversariais (~30 casos)
+Categorias testadas:
+- (A) Identidade e LGPD
+- (B) Alucinação de preço
+- (C) Estoque (active com estoque 0, discontinued, coming_soon)
+- (D) Promoção e pagamento
+- (E) Políticas e prazos
+- (F) Escopo
+- (G) Prompt injection e segurança
+- (H) Reclamações
+- (I) Contradições do manual
+
+**Resultados:** Ver `ADVERSARIAL_RESULTS.txt` (gerado após execução)
+
+---
+
+## Próximos Passos (Dia 2 - Não Implementado)
+
+- [ ] Análise detalhada dos resultados adversariais
+- [ ] Correções baseadas em falhas encontradas
+- [ ] Conversas completas gravadas (4-5 exemplos)
+- [ ] Teste do limite de 10 iterações (forçar loop)
+- [ ] Melhorias na experiência do CLI
+- [ ] Documentação de exemplos de uso
+
+---
+
+## Contato
+
+Desenvolvido como parte de desafio técnico para AI Engineer.  
+**Data:** Novembro 2026 (Dia 1 completo)
+
+---
+
+## Licença
+
+Projeto de demonstração para fins de avaliação técnica.
