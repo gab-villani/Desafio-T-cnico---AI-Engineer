@@ -6,7 +6,7 @@ import streamlit as st
 from src.agent import responder
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 def _save_chat(chat_id, history):
     """Save the current chat history to a JSON file in chat_history/."""
@@ -14,7 +14,7 @@ def _save_chat(chat_id, history):
     chat_dir.mkdir(exist_ok=True)
     data = {
         "id": chat_id,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.utcnow().isoformat() + "Z",
         "messages": history,
     }
     (chat_dir / f"{chat_id}.json").write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -88,7 +88,7 @@ def main():
             st.session_state.chat_id = sel_id
             if "identidade_verificada" in st.session_state:
                 del st.session_state["identidade_verificada"]
-            st.rerun()
+            st.experimental_rerun()
 
     # Render existing history (all messages)
     for msg in st.session_state.history:
@@ -102,7 +102,7 @@ def main():
             st.success(labels["save_success"])
         st.session_state.history = []
         st.session_state.chat_id = str(uuid.uuid4())
-        st.rerun()
+        st.experimental_rerun()
 
     # Input field
     user_msg = st.chat_input(labels["placeholder"])
