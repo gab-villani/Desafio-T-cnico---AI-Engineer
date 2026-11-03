@@ -8,9 +8,9 @@ Vocês vendem amplificador?
 
 Olá! Tudo bem?
 
-Na Empório da Música nós trabalhamos exclusivamente com instrumentos musicais (como guitarras, violões, baixos, teclados, baterias, sopros, entre outros). Por isso, não vendemos acessórios ou equipamentos como amplificadores. 
+Aqui na Empório da Música nós trabalhamos exclusivamente com instrumentos musicais (como violões, guitarras, teclados, sopros, baterias, entre outros), por isso não vendemos amplificadores e acessórios como cabos, pedais ou palhetas. 
 
-Se estiver precisando de algum instrumento para acompanhar o seu som, é só me falar que te ajudo a encontrar ótimas opções por aqui!
+Se estiver precisando de algum instrumento novo para o seu som, é só me falar que te ajudo a encontrar o ideal!
 
 ## 🧑 Cliente
 
@@ -20,7 +20,7 @@ Vocês vendem amplificador?
 
 Olá! Tudo bem?
 
-Na Empório da Música nós trabalhamos exclusivamente com instrumentos musicais (como guitarras, violões, baixos, teclados, baterias, sopros, entre outros). Por isso, não vendemos acessórios ou equipamentos como amplificadores. 
+Aqui na Empório da Música nós trabalhamos exclusivamente com instrumentos musicais (como violões, guitarras, teclados, sopros, baterias, entre outros), por isso não vendemos amplificadores e acessórios como cabos, pedais ou palhetas. 
 
-Se estiver precisando de algum instrumento para acompanhar o seu som, é só me falar que te ajudo a encontrar ótimas opções por aqui!
+Se estiver precisando de algum instrumento novo para o seu som, é só me falar que te ajudo a encontrar o ideal!
 

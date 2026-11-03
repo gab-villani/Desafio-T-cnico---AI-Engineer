@@ -6,9 +6,13 @@ Quero devolver o pedido 5, como proceder?
 
 ## 🤖 Atendente
 
-Para iniciar o processo de devolução do **pedido 5**, precisamos confirmar alguns dados de segurança. 
+Para solicitar a devolução do seu pedido, é importante observar as regras da nossa política de trocas e devoluções:
 
-Poderia me informar o **e-mail** ou o **telefone** cadastrado na compra?
+1. **Prazo:** O pedido deve ser devolvido em até **7 (sete) dias corridos** após o recebimento (em caso de arrependimento) ou até **30 dias corridos** se for por defeito de fabricação.
+2. **Condições do produto:** O item precisa estar em sua embalagem original, sem sinais de uso, acompanhado de todos os acessórios, manuais e nota fiscal (exceto em casos de defeito).
+3. **Reembolso:** O estorno do valor será realizado na mesma forma de pagamento original em até 10 dias úteis após o recebimento e conferência do produto em nosso centro de distribuição. O frete de devolução é por conta da loja.
+
+Como preciso iniciar o procedimento vinculando seus dados de cadastro, por favor, me informe o seu **e-mail** ou **telefone** cadastrado no pedido 5 para que eu possa prosseguir com a solicitação.
 
 ## 🧑 Cliente
 
@@ -16,28 +20,13 @@ Quero devolver o pedido 5, como proceder?
 
 ## 🤖 Atendente
 
-Para iniciar o processo de devolução do **pedido 5**, precisamos confirmar alguns dados de segurança. 
+Para solicitar a devolução do seu pedido, é importante observar as regras da nossa política de trocas e devoluções:
 
-Poderia me informar o **e-mail** ou o **telefone** cadastrado na compra?
+1. **Prazo:** O pedido deve ser devolvido em até **7 (sete) dias corridos** após o recebimento (em caso de arrependimento) ou até **30 dias corridos** se for por defeito de fabricação.
+2. **Condições do produto:** O item precisa estar em sua embalagem original, sem sinais de uso, acompanhado de todos os acessórios, manuais e nota fiscal (exceto em casos de defeito).
+3. **Reembolso:** O estorno do valor será realizado na mesma forma de pagamento original em até 10 dias úteis após o recebimento e conferência do produto em nosso centro de distribuição. O frete de devolução é por conta da loja.
 
-## 🧑 Cliente
-
-Meu e-mail é leonardo.costa@cmail.com
-
-## 🤖 Atendente
-
-Olá, Leonardo! 
-
-Infelizmente, o e-mail informado (`leonardo.costa@cmail.com`) não foi localizado ou não confere com os dados cadastrados no **pedido 5**. Pode ser que tenha sido utilizado outro e-mail ou número de telefone na hora da compra. Poderia confirmar se há outro dado de contato associado a esse pedido?
-
-De qualquer forma, para adiantar como funciona o nosso processo de devolução (conforme a nossa política):
-
-1. **Prazo:** Você tem até **7 dias corridos** após o recebimento do produto para solicitar a devolução por arrependimento.
-2. **Condições:** O produto deve estar em sua embalagem original, sem sinais de uso, acompanhado de todos os acessórios e manuais.
-3. **Reembolso:** O valor é estornado na mesma forma de pagamento original em até 10 dias úteis após o recebimento e conferência do item na loja.
-4. **Frete:** O frete de devolução é por nossa conta em caso de arrependimento dentro do prazo legal.
-
-Assim que confirmarmos o seu e-mail ou telefone correto, abriremos o protocolo de devolução do pedido 5 para você!
+Como preciso iniciar o procedimento vinculando seus dados de cadastro, por favor, me informe o seu **e-mail** ou **telefone** cadastrado no pedido 5 para que eu possa prosseguir com a solicitação.
 
 ## 🧑 Cliente
 
@@ -45,16 +34,17 @@ Meu e-mail é leonardo.costa@cmail.com
 
 ## 🤖 Atendente
 
-Olá, Leonardo! 
+O sistema retornou um erro ao tentar validar o seu e-mail (`leonardo.costa@cmail.com`) com o pedido 5, indicando que os dados não conferem. 
 
-Infelizmente, o e-mail informado (`leonardo.costa@cmail.com`) não foi localizado ou não confere com os dados cadastrados no **pedido 5**. Pode ser que tenha sido utilizado outro e-mail ou número de telefone na hora da compra. Poderia confirmar se há outro dado de contato associado a esse pedido?
+Poderia, por favor, confirmar se o número do pedido é realmente o **5** e se este é o mesmo e-mail utilizado no momento da compra (ou se prefere tentar informar o número de telefone cadastrado)?
 
-De qualquer forma, para adiantar como funciona o nosso processo de devolução (conforme a nossa política):
+## 🧑 Cliente
 
-1. **Prazo:** Você tem até **7 dias corridos** após o recebimento do produto para solicitar a devolução por arrependimento.
-2. **Condições:** O produto deve estar em sua embalagem original, sem sinais de uso, acompanhado de todos os acessórios e manuais.
-3. **Reembolso:** O valor é estornado na mesma forma de pagamento original em até 10 dias úteis após o recebimento e conferência do item na loja.
-4. **Frete:** O frete de devolução é por nossa conta em caso de arrependimento dentro do prazo legal.
+Meu e-mail é leonardo.costa@cmail.com
 
-Assim que confirmarmos o seu e-mail ou telefone correto, abriremos o protocolo de devolução do pedido 5 para você!
+## 🤖 Atendente
+
+O sistema retornou um erro ao tentar validar o seu e-mail (`leonardo.costa@cmail.com`) com o pedido 5, indicando que os dados não conferem. 
+
+Poderia, por favor, confirmar se o número do pedido é realmente o **5** e se este é o mesmo e-mail utilizado no momento da compra (ou se prefere tentar informar o número de telefone cadastrado)?
 

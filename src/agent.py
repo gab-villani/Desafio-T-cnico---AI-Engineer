@@ -109,6 +109,9 @@ def responder(mensagem: str, historico: list[dict[str, str]] | None = None, idio
         function_calls = [step for step in interaction.steps if step.type == "function_call"]
         if not function_calls:
             answer = (interaction.output_text or "Não consegui gerar uma resposta agora. Tente novamente.").strip()
+            # Translate key terms for English mode
+            if idioma == "en":
+                answer = answer.replace("e‑mail", "email").replace("e-mail", "email").replace("email", "email").replace("telefone", "phone").replace("número de telefone", "phone")
             conversation.extend([{"role": "user", "content": mensagem.strip()}, {"role": "assistant", "content": answer}])
             return answer
 
@@ -131,6 +134,9 @@ def responder(mensagem: str, historico: list[dict[str, str]] | None = None, idio
             )
         )
 
-    fallback = "Tive uma dificuldade para concluir a consulta. Pode reformular sua pergunta ou tentar novamente?"
+    if idioma == "en":
+        fallback = "I had difficulty completing the request. Please rephrase your question or try again."
+    else:
+        fallback = "Tive uma dificuldade para concluir a consulta. Pode reformular sua pergunta ou tentar novamente?"
     conversation.extend([{"role": "user", "content": mensagem.strip()}, {"role": "assistant", "content": fallback}])
     return fallback

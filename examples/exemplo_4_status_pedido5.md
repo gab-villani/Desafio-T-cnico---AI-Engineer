@@ -6,7 +6,7 @@ Qual o status do pedido 5?
 
 ## 🤖 Atendente
 
-Para consultar o status do seu pedido, por favor, me informe o e-mail ou o telefone cadastrado na compra.
+Para que eu possa consultar o status do pedido 5, preciso que você me informe o **e-mail** ou o **número de telefone** utilizado na hora da compra.
 
 ## 🧑 Cliente
 
@@ -14,7 +14,7 @@ Qual o status do pedido 5?
 
 ## 🤖 Atendente
 
-Para consultar o status do seu pedido, por favor, me informe o e-mail ou o telefone cadastrado na compra.
+Para que eu possa consultar o status do pedido 5, preciso que você me informe o **e-mail** ou o **número de telefone** utilizado na hora da compra.
 
 ## 🧑 Cliente
 
@@ -22,9 +22,9 @@ Meu e-mail é leonardo.costa@cmail.com
 
 ## 🤖 Atendente
 
-Não consegui localizar o pedido 5 com o e-mail `leonardo.costa@cmail.com`. 
+Não consegui validar os dados para consultar o pedido 5 com o e-mail `leonardo.costa@cmail.com`. 
 
-Poderia confirmar se o número do pedido está correto ou se foi cadastrado com algum outro e-mail ou telefone?
+Poderia confirmar se utilizou outro e-mail ou o número de telefone na hora da compra?
 
 ## 🧑 Cliente
 
@@ -32,7 +32,7 @@ Meu e-mail é leonardo.costa@cmail.com
 
 ## 🤖 Atendente
 
-Não consegui localizar o pedido 5 com o e-mail `leonardo.costa@cmail.com`. 
+Não consegui validar os dados para consultar o pedido 5 com o e-mail `leonardo.costa@cmail.com`. 
 
-Poderia confirmar se o número do pedido está correto ou se foi cadastrado com algum outro e-mail ou telefone?
+Poderia confirmar se utilizou outro e-mail ou o número de telefone na hora da compra?
 

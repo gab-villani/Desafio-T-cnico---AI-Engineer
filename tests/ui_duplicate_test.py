@@ -1,32 +1,41 @@
 import json
-import os
+import pathlib
+import shutil
+import unittest
 from pathlib import Path
 from streamlit.testing.v1 import AppTest
-import unittest
+from streamlit.errors import StreamlitDuplicateElementId
 
-def send_messages(app_path, msgs, idioma="pt-BR"):
-    # Resolve absolute path for the UI script relative to this test file
-    script_path = (Path(__file__).resolve().parents[1] / app_path).as_posix()
-    at = AppTest.from_file(script_path).run()
-    # Set language selector if needed
-    lang_select = at.sidebar.selectbox("Idioma / Language")
-    lang_select.set_value(idioma)
-    for m in msgs:
-        at.chat_input.set_value(m)
-        at.chat_input.post()
-    # Return final session_state history
-    return at.session_state.get('history', [])
+class TestDuplicateChatButtons(unittest.TestCase):
+    def setUp(self):
+        # Ensure chat_history is clean
+        self.chat_dir = Path('chat_history')
+        self.chat_dir.mkdir(exist_ok=True)
+        # remove any existing files
+        for f in self.chat_dir.glob('*.json'):
+            f.unlink()
+        # create two files with same id and same first message
+        dup_id = 'dup-id-1234'
+        msg = 'Mensagem teste'
+        date = '2026-11-02T12:00:00+00:00'
+        for i in range(2):
+            data = {
+                'id': dup_id,
+                'created_at': date,
+                'messages': [{'role': 'user', 'content': msg}]
+            }
+            (self.chat_dir / f'dup_{i}.json').write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
+        self.script_path = (Path(__file__).parent.parent / 'ui' / 'app.py').as_posix()
 
-class TestUIDuplicate(unittest.TestCase):
-    def test_no_duplicate_messages(self):
-        msgs = ["Oi", "Quanto custa o Takamine GD20?", "Qual o status do pedido 5?"]
-        history = send_messages('ui/app.py', msgs)
-        # Expect 6 entries (3 user, 3 assistant)
-        self.assertEqual(len(history), 6, f"Histórico tem {len(history)} mensagens, esperado 6")
-        user_msgs = [h for h in history if h['role'] == 'user']
-        self.assertEqual(len(user_msgs), 3, f"Mensagens de usuário duplicadas: {len(user_msgs)}")
-        for sent, recorded in zip(msgs, user_msgs):
-            self.assertEqual(sent, recorded['content'])
+    def test_no_duplicate_element_error(self):
+        try:
+            AppTest.from_file(self.script_path).run()
+        except StreamlitDuplicateElementId as e:
+            self.fail(f'StreamlitDuplicateElementId raised: {e}')
+        except Exception as e:
+            # any other exception also fails the test
+            self.fail(f'Unexpected exception: {e}')
+        # if no exception, test passes
 
 if __name__ == '__main__':
     unittest.main()

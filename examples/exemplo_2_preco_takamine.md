@@ -6,9 +6,13 @@ Quanto custa o Takamine GD20?
 
 ## 🤖 Atendente
 
-O **Takamine GD20 Dreadnought Natural** custa **R$ 2.199,00** à vista. 
+O violão **Takamine GD20 Dreadnought Natural** custa **R$ 2.199,00**. 
 
-Se quiser saber sobre opções de parcelamento ou formas de pagamento, é só me avisar!
+Algumas opções de pagamento disponíveis:
+* **À vista (PIX):** R$ 2.089,05 *(com 5% de desconto)*
+* **Cartão de crédito:** R$ 2.199,00 em até **10x sem juros** de R$ 219,90.
+
+Temos o produto disponível em estoque no momento! Deseja calcular o frete ou tirar alguma dúvida sobre as especificações dele?
 
 ## 🧑 Cliente
 
@@ -16,21 +20,13 @@ Quanto custa o Takamine GD20?
 
 ## 🤖 Atendente
 
-O **Takamine GD20 Dreadnought Natural** custa **R$ 2.199,00** à vista. 
+O violão **Takamine GD20 Dreadnought Natural** custa **R$ 2.199,00**. 
 
-Se quiser saber sobre opções de parcelamento ou formas de pagamento, é só me avisar!
+Algumas opções de pagamento disponíveis:
+* **À vista (PIX):** R$ 2.089,05 *(com 5% de desconto)*
+* **Cartão de crédito:** R$ 2.199,00 em até **10x sem juros** de R$ 219,90.
 
-## 🧑 Cliente
-
-Tem promoção ativa nele? Qual o preço original e percentual?
-
-## 🤖 Atendente
-
-Não, o **Takamine GD20 Dreadnought Natural** não possui nenhuma promoção ativa no momento. 
-
-O valor dele permanece o preço original de **R$ 2.199,00**. 
-
-Se quiser ver outros violões que estão em promoção ou tirar dúvidas sobre o parcelamento, é só me avisar!
+Temos o produto disponível em estoque no momento! Deseja calcular o frete ou tirar alguma dúvida sobre as especificações dele?
 
 ## 🧑 Cliente
 
@@ -38,9 +34,13 @@ Tem promoção ativa nele? Qual o preço original e percentual?
 
 ## 🤖 Atendente
 
-Não, o **Takamine GD20 Dreadnought Natural** não possui nenhuma promoção ativa no momento. 
+Não, o **Takamine GD20 Dreadnought Natural** não possui nenhuma promoção ativa no momento. O preço dele é o valor original de **R$ 2.199,00**.
 
-O valor dele permanece o preço original de **R$ 2.199,00**. 
+## 🧑 Cliente
 
-Se quiser ver outros violões que estão em promoção ou tirar dúvidas sobre o parcelamento, é só me avisar!
+Tem promoção ativa nele? Qual o preço original e percentual?
+
+## 🤖 Atendente
+
+Não, o **Takamine GD20 Dreadnought Natural** não possui nenhuma promoção ativa no momento. O preço dele é o valor original de **R$ 2.199,00**.
 
