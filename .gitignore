@@ -1,5 +1,8 @@
-# Python virtual environments
 .venv/
+
+# chat history directory
+chat_history/
+
 venv/
 
 # Environment and secrets

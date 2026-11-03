@@ -28,7 +28,44 @@ cp .env.example .env
 # Edite .env e adicione sua GEMINI_API_KEY
 ```
 
-### Execução
+
+## Interface web (opcional)
+
+Para quem quiser experimentar rapidamente o agente via navegador, há uma UI mínima baseada em **Streamlit**.
+
+```bash
+# Instale dependências (inclui streamlit)
+pip install -r requirements.txt
+
+# Rode a aplicação web (Windows)
+streamlit run ui/app.py
+
+# Rode a aplicação web (Linux/macOS)
+streamlit run ui/app.py
+```
+
+A interface exibe o histórico da conversa, permite iniciar uma *Nova conversa* (limpa o histórico) e mostra um indicador de *digitando…* enquanto o agente processa a mensagem. Em caso de falha ou timeout, aparece uma mensagem de erro amigável em português.
+
+A CLI permanece o caminho principal (`python src/cli.py`).
+
+
+Para quem quiser experimentar rapidamente o agente via navegador, há uma UI mínima baseada em **Streamlit**.
+
+```bash
+# Instale dependências (inclui streamlit)
+pip install -r requirements.txt
+
+# Rode a aplicação web (Windows)
+streamlit run ui/app.py
+
+# Rode a aplicação web (Linux/macOS)
+streamlit run ui/app.py
+```
+
+A interface exibe o histórico da conversa, permite iniciar uma *Nova conversa* (limpa o histórico) e mostra um indicador de *digitando…* enquanto o agente processa a mensagem. Em caso de falha ou timeout, aparece uma mensagem de erro amigável em português.
+
+A CLI permanece o caminho principal (`python src/cli.py`).
+
 
 ```bash
 python src/cli.py
