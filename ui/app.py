@@ -107,24 +107,37 @@ def main():
         if not first:
             return labels["new_chat"]
         return (first[:40] + "…") if len(first) > 40 else first
+    # Current chat title
+    def _title_from_hist(hist):
+        if not hist:
+            return labels["new_chat"]
+        first = next((m["content"] for m in hist if m["role"] == "user"), "")
+        first = " ".join(first.split())
+        if not first:
+            return labels["new_chat"]
+        return (first[:40] + "…") if len(first) > 40 else first
     current_title = _title_from_hist(st.session_state.history)
     current_option = f"{current_title} ({st.session_state.created_at[:10]})"
-    saved_options = [f"{t} ({dt[:10]})" for t, _, dt in sorted(saved_chats, key=lambda x: x[2], reverse=True) if x[1] != st.session_state.chat_id]
-    options = [current_option] + saved_options
-    selected = history_selector_placeholder.selectbox(labels["load_chat"], options, index=0)
-    if selected != current_option:
-        # map option to id
-        opt_to_id = {f"{t} ({dt[:10]})": cid for t, cid, dt in saved_chats}
-        sel_id = opt_to_id.get(selected)
-        if sel_id:
-            sel_file = chat_dir / f"{sel_id}.json"
-            if sel_file.exists():
-                data = json.loads(sel_file.read_text(encoding="utf-8"))
-                st.session_state.history = data["messages"]
-                st.session_state.chat_id = sel_id
-                st.session_state.created_at = data.get("created_at", datetime.now(timezone.utc).isoformat())
-                if "identidade_verificada" in st.session_state:
-                    del st.session_state["identidade_verificada"]
+    # Build mapping of chat ids to display labels
+    id_to_label = {st.session_state.chat_id: current_option}
+    for title, cid, dt in sorted(saved_chats, key=lambda x: x[2], reverse=True):
+        if cid != st.session_state.chat_id:
+            id_to_label[cid] = f"{title} ({dt[:10]})"
+    # Options are the chat ids, with current chat first
+    options = [st.session_state.chat_id] + [cid for cid in id_to_label.keys() if cid != st.session_state.chat_id]
+    selected = history_selector_placeholder.selectbox(
+        labels["load_chat"], options, index=0, format_func=lambda i: id_to_label[i]
+    )
+    if selected != st.session_state.chat_id:
+        # Load selected chat
+        sel_file = chat_dir / f"{selected}.json"
+        if sel_file.exists():
+            data = json.loads(sel_file.read_text(encoding="utf-8"))
+            st.session_state.history = data["messages"]
+            st.session_state.chat_id = selected
+            st.session_state.created_at = data.get("created_at", datetime.now(timezone.utc).isoformat())
+            if "identidade_verificada" in st.session_state:
+                del st.session_state["identidade_verificada"]
     
 
     # Render existing history (all messages)
