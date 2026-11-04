@@ -9,6 +9,7 @@ import streamlit as st
 from src.agent import responder
 import json
 import uuid
+import re
 from datetime import datetime, timezone
 
 def _save_chat(chat_id: str, history: list) -> None:
@@ -17,8 +18,9 @@ def _save_chat(chat_id: str, history: list) -> None:
     """
     if not history:
         return
-    # Validate chat_id (hexadecimal)
-    if not all(c in "0123456789abcdef" for c in chat_id.lower()):
+    # Validate chat_id (allowed chars: alphanum, '_' or '-', max 64 chars)
+    CHAT_ID_RE = r"^[A-Za-z0-9_-]{1,64}$"
+    if not re.fullmatch(CHAT_ID_RE, chat_id):
         raise ValueError("Invalid chat_id format")
     chat_dir = CHAT_DIR
     chat_dir.mkdir(parents=True, exist_ok=True)
@@ -75,7 +77,7 @@ def main():
 
     # Initialize chat ID and history in session state
     if "chat_id" not in st.session_state:
-        st.session_state.chat_id = str(uuid.uuid4())
+        st.session_state.chat_id = uuid.uuid4().hex
     if "history" not in st.session_state:
         st.session_state.history = []
 
@@ -92,9 +94,14 @@ def main():
                     first_user = next((m["content"] for m in data["messages"] if m["role"] == "user"), "")
                     first_user = " ".join(first_user.split())
                     title = first_user[:30] + ("..." if len(first_user) > 30 else "")
-                    saved_chats.append((title, data["id"], data["created_at"]))
+                    # Use filename (stem) as chat id, not the JSON field
+                    cid = file.stem
+                    # Validate id format before adding
+                    if not re.fullmatch(CHAT_ID_RE, cid):
+                        continue
+                    saved_chats.append((title, cid, data["created_at"]))
                 except Exception:
-                    continue
+                 continue
     # Ensure created_at for current chat is stored
     if "created_at" not in st.session_state:
         st.session_state.created_at = datetime.now(timezone.utc).isoformat()
@@ -147,9 +154,25 @@ def main():
 
     # New conversation button
     if st.button(labels["new_chat"]):
-        if st.session_state.history:
-            _save_chat(st.session_state.chat_id, st.session_state.history)
-            st.success(labels["save_success"])
+        st.session_state.chat_id = str(uuid.uuid4())
+        st.session_state.history = []
+        st.session_state.created_at = datetime.now(timezone.utc).isoformat()
+        if "identidade_verificada" in st.session_state:
+            del st.session_state["identidade_verificada"]
+        # Clear the history selector to force re-render
+        history_selector_placeholder.empty()
+    # Persist chat with validation and safe path
+    try:
+         _save_chat(st.session_state.chat_id, st.session_state.history)
+
+    except (ValueError, OSError) as e:
+        st.warning(f"{'⚠️' if st.session_state.idioma == 'pt-BR' else '⚠️'} {e}")
+        # regenerate a valid chat_id if current one is invalid
+        if not re.fullmatch(CHAT_ID_RE, st.session_state.chat_id):
+            st.session_state.chat_id = uuid.uuid4().hex
+        # keep history in memory
+        # do not re‑raise
+
         st.session_state.history = []
         st.session_state.chat_id = str(uuid.uuid4())
 
