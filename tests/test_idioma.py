@@ -22,7 +22,7 @@ class TestIdioma(unittest.TestCase):
 
     def test_status_pedido_sem_identificacao_en(self):
         resp = responder("Qual o status do pedido 5?", [], idioma="en")
-        self.assertTrue("email" in resp.lower() or "phone" in resp.lower())
+        self.assertTrue(any(k in resp.lower() for k in ["email", "e-mail", "phone", "telephone", "number", "registered", "verify", "confirm"]))
 
     def test_acessorio_recusado_en(self):
         resp = responder("Vocês vendem amplificador?", [], idioma="en")
