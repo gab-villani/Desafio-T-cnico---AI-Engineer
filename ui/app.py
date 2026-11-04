@@ -1,6 +1,8 @@
 import sys
 import os
 from pathlib import Path
+# Define chat directory (environment‑overrideable)
+CHAT_DIR = Path(os.getenv("CHAT_HISTORY_DIR", str(Path(__file__).resolve().parent.parent / "chat_history")))
 # Add project root to sys.path so that 'src' can be imported when running from ui/
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import streamlit as st
@@ -78,6 +80,7 @@ def main():
         st.session_state.history = []
 
     # After processing possible new message, build and render the history selector
+    history_selector_placeholder = st.sidebar.empty()
     # Gather saved chats
     chat_dir = CHAT_DIR
     saved_chats = []
