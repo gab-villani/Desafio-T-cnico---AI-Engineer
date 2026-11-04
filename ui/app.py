@@ -77,8 +77,8 @@ def main():
     if "history" not in st.session_state:
         st.session_state.history = []
 
-    # Sidebar: history selector (always shown)
-    # Ensure CHAT_DIR exists and gather saved chats
+    # After processing possible new message, build and render the history selector
+    # Gather saved chats
     chat_dir = CHAT_DIR
     saved_chats = []
     if chat_dir.exists():
@@ -87,33 +87,30 @@ def main():
                 try:
                     data = json.loads(file.read_text(encoding="utf-8"))
                     first_user = next((m["content"] for m in data["messages"] if m["role"] == "user"), "")
-                    # collapse whitespace
                     first_user = " ".join(first_user.split())
                     title = first_user[:30] + ("..." if len(first_user) > 30 else "")
                     saved_chats.append((title, data["id"], data["created_at"]))
                 except Exception:
                     continue
-    # Ensure created_at stored in session for current chat
+    # Ensure created_at for current chat is stored
     if "created_at" not in st.session_state:
         st.session_state.created_at = datetime.now(timezone.utc).isoformat()
-    # Helper to get title from current history
-    def _current_title(hist):
+    # Current chat title
+    def _title_from_hist(hist):
         if not hist:
             return labels["new_chat"]
-        first_user = next((m["content"] for m in hist if m["role"] == "user"), "")
-        first_user = " ".join(first_user.split())
-        if not first_user:
+        first = next((m["content"] for m in hist if m["role"] == "user"), "")
+        first = " ".join(first.split())
+        if not first:
             return labels["new_chat"]
-        return (first_user[:40] + "…") if len(first_user) > 40 else first_user
-    current_title = _current_title(st.session_state.history)
+        return (first[:40] + "…") if len(first) > 40 else first
+    current_title = _title_from_hist(st.session_state.history)
     current_option = f"{current_title} ({st.session_state.created_at[:10]})"
-    # Build options: current first, then saved (most recent first)
     saved_options = [f"{t} ({dt[:10]})" for t, _, dt in sorted(saved_chats, key=lambda x: x[2], reverse=True) if x[1] != st.session_state.chat_id]
     options = [current_option] + saved_options
-    selected = st.sidebar.selectbox(labels["load_chat"], options, index=0)
-    # If user selects a saved conversation, load it
+    selected = history_selector_placeholder.selectbox(labels["load_chat"], options, index=0)
     if selected != current_option:
-        # map option to chat id
+        # map option to id
         opt_to_id = {f"{t} ({dt[:10]})": cid for t, cid, dt in saved_chats}
         sel_id = opt_to_id.get(selected)
         if sel_id:
